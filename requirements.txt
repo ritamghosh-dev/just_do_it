@@ -6,6 +6,6 @@ python-dotenv
 alembic
 email-validator
 passlib
-jose
+python-jose
 python-multipart
 pydantic
