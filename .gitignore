@@ -1,0 +1,14 @@
+# Secrets (NEVER commit these!)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+
+# Node.js (Frontend)
+frontend/node_modules/
+frontend/dist/
+
+# Mac System Files
+.DS_Store
