@@ -9,7 +9,7 @@ function TodoList() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [editId, setEditId] = useState(0); // 0 means "Create Mode"
-
+  const API_URL = import.meta.env.VITE_API_URL;
   // --- 1. FETCH (Read) ---
   useEffect(() => {
     const fetchTodos = async () => {
@@ -19,7 +19,7 @@ function TodoList() {
         return;
       }
       try {
-        const response = await axios.get("http://127.0.0.1:8000/todos", {
+        const response = await axios.get(`${API_URL}/todos`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTodos(response.data);
@@ -37,7 +37,7 @@ function TodoList() {
 
     try {
       const response = await axios.put(
-        `http://127.0.0.1:8000/todos/${todo.id}`,
+        `${API_URL}/todos/${todo.id}`,
         { completed: !todo.completed }, // Flip the status!
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -71,7 +71,7 @@ function TodoList() {
       if (editId === 0) {
         // --- CREATE MODE (POST) ---
         const response = await axios.post(
-          "http://127.0.0.1:8000/todos",
+          `${API_URL}/todos`,
           { title, description },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -79,7 +79,7 @@ function TodoList() {
       } else {
         // --- UPDATE MODE (PUT) ---
         const response = await axios.put(
-          `http://127.0.0.1:8000/todos/${editId}`,
+          `${API_URL}/todos/${editId}`,
           { title, description },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -102,7 +102,7 @@ function TodoList() {
     const token = localStorage.getItem("token");
 
     try {
-      await axios.delete(`http://127.0.0.1:8000/todos/${id}`, {
+      await axios.delete(`${API_URL}/todos/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

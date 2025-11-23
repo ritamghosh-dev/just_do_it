@@ -7,7 +7,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate(); // This is our "Redirect" tool
-
+  const API_URL = import.meta.env.VITE_API_URL;
   const handleLogin = async (e) => {
     e.preventDefault(); // Stop the page from refreshing
     setError("");
@@ -15,7 +15,7 @@ function Login() {
     try {
       // 1. Send the "Order" to the Chef (Backend)
       // Note: This URL must match your FastAPI address!
-      const response = await axios.post("http://127.0.0.1:8000/auth/login", {
+      const response = await axios.post(`${API_URL}/auth/login`, {
         email: email,
         password: password,
       });

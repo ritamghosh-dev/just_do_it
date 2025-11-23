@@ -7,14 +7,14 @@ function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
+  const API_URL = import.meta.env.VITE_API_URL;
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
       // Call the Backend Register Endpoint
-      await axios.post("http://127.0.0.1:8000/auth/register", {
+      await axios.post(`${API_URL}/auth/register`, {
         email: email,
         password: password,
       });
