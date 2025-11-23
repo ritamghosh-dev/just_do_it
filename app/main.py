@@ -10,6 +10,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:5173",
+    "https://just-do-it-frontend.onrender.com"
 ]
 
 app.add_middleware(
