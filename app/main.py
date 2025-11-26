@@ -10,7 +10,8 @@ app = FastAPI()
 
 origins = [
     "http://localhost:5173",
-    "https://just-do-it-frontend.onrender.com"
+    "https://just-do-it-frontend.onrender.com",
+    "https://just-do-it-taupe.vercel.app"
 ]
 
 app.add_middleware(
