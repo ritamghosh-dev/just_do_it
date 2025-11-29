@@ -7,36 +7,39 @@ function TodoList() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
+  const [priority, setPriority] = useState(1);
   const navigate = useNavigate();
   const [editId, setEditId] = useState(0); // 0 means "Create Mode"
   const [filter, setFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
   const API_URL = import.meta.env.VITE_API_URL;
   // --- 1. FETCH (Read) ---
+  const fetchTodos = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/");
+      return;
+    }
+    try {
+      const params = new URLSearchParams();
+      if (filter === "completed") params.append("completed", "true");
+      else if (filter === "pending") params.append("completed", "false");
+
+      if (priorityFilter !== "all") params.append("priority", priorityFilter);
+
+      const response = await axios.get(`${API_URL}/todos`, {
+        params: params,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTodos(response.data);
+    } catch (err) {
+      setError("Failed to load tasks. Please login again.");
+      navigate("/");
+    }
+  };
   useEffect(() => {
-    const fetchTodos = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/");
-        return;
-      }
-      try {
-        let url = `${API_URL}/todos`;
-        if (filter === "completed") {
-          url += "?completed=true";
-        } else if (filter === "pending") {
-          url += "?completed=false";
-        }
-        const response = await axios.get(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setTodos(response.data);
-      } catch (err) {
-        setError("Failed to load tasks. Please login again.");
-        navigate("/");
-      }
-    };
     fetchTodos();
-  }, [navigate, filter]);
+  }, [navigate, filter, priorityFilter]);
 
   // --- 3. UPDATE (Toggle Completed) ---
   const toggleStatus = async (todo) => {
@@ -60,6 +63,7 @@ function TodoList() {
     setEditId(todo.id); // 1. Switch to Edit Mode for this ID
     setTitle(todo.title); // 2. Fill the title box
     setDescription(todo.description); // 3. Fill the description box
+    setPriority(todo.priority || 1); // 4. Fill the priority box
   };
 
   // 2. CANCEL EDIT MODE
@@ -67,6 +71,7 @@ function TodoList() {
     setEditId(0);
     setTitle("");
     setDescription("");
+    setPriority(1);
   };
 
   // 3. THE TRAFFIC COP (Create vs Update)
@@ -77,28 +82,29 @@ function TodoList() {
     try {
       if (editId === 0) {
         // --- CREATE MODE (POST) ---
-        const response = await axios.post(
+        await axios.post(
           `${API_URL}/todos`,
-          { title, description },
+          { title, description, priority },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setTodos([...todos, response.data]);
+        await fetchTodos();
       } else {
         // --- UPDATE MODE (PUT) ---
-        const response = await axios.put(
+        await axios.put(
           `${API_URL}/todos/${editId}`,
-          { title, description },
+          { title, description, priority },
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
         // Update the list instantly
-        setTodos(todos.map((t) => (t.id === editId ? response.data : t)));
+        await fetchTodos();
         setEditId(0); // Reset mode back to "Create"
       }
 
       // Clear form in both cases
       setTitle("");
       setDescription("");
+      setPriority(1);
     } catch (err) {
       setError("Failed to save task.");
     }
@@ -125,6 +131,35 @@ function TodoList() {
   const handleLogout = () => {
     localStorage.removeItem("token"); //1. Destroy the auth token
     navigate("/"); //2. Redirect to login page
+  };
+
+  const getPriorityBadge = (priority) => {
+    switch (priority) {
+      case 3:
+        return (
+          <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            High
+          </span>
+        );
+      case 2:
+        return (
+          <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            Medium
+          </span>
+        );
+      case 1:
+        return (
+          <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            Low
+          </span>
+        );
+      default:
+        return (
+          <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            None
+          </span>
+        );
+    }
   };
 
   return (
@@ -161,6 +196,16 @@ function TodoList() {
             onChange={(e) => setDescription(e.target.value)}
             rows="2"
           />
+          {/* PRIORITY SELECTION */}
+          <select
+            value={priority}
+            onChange={(e) => setPriority(Number(e.target.value))}
+            className="p-2 border border-gray-300 rounded"
+          >
+            <option value="1">Low Priority 🟢</option>
+            <option value="2">Medium Priority 🟡</option>
+            <option value="3">High Priority 🔴</option>
+          </select>
           <div className="flex gap-2">
             {/* The Submit Button changes color and text! */}
             <button
@@ -188,6 +233,19 @@ function TodoList() {
         </form>
 
         <div className="flex justify-end mb-4">
+          {/* NEW: Priority Filter */}
+          <select
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            className="p-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Priorities</option>
+            <option value="3">High 🔴</option>
+            <option value="2">Medium 🟡</option>
+            <option value="1">Low 🟢</option>
+          </select>
+
+          {/* EXISTING: Status Filter */}
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
@@ -215,15 +273,20 @@ function TodoList() {
                 />
 
                 <div>
-                  <h3
-                    className={`text-xl font-semibold ${
-                      todo.completed
-                        ? "line-through text-gray-400"
-                        : "text-gray-800"
-                    }`}
-                  >
-                    {todo.title}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3
+                      className={`text-xl font-semibold ${
+                        todo.completed
+                          ? "line-through text-gray-400"
+                          : "text-gray-800"
+                      }`}
+                    >
+                      {todo.title}
+                    </h3>
+
+                    {/* NEW: The Badge Function Call 🏷️ */}
+                    {getPriorityBadge(todo.priority)}
+                  </div>
                   {todo.description && (
                     <p className="text-gray-600 mt-1">{todo.description}</p>
                   )}

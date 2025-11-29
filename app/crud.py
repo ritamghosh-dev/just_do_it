@@ -6,6 +6,7 @@ def create_todo(db: Session, todo: schemas.TodoCreate, user_id: int):
     db_todo = models.Todo(
         title = todo.title,
         description = todo.description,
+        priority = todo.priority,
         completed = todo.completed,
         user_id = user_id
     )
@@ -14,13 +15,15 @@ def create_todo(db: Session, todo: schemas.TodoCreate, user_id: int):
     db.refresh(db_todo)
     return db_todo
 
-def get_todos(db: Session, user_id: int, completed : bool | None = None):
+def get_todos(db: Session, user_id: int, completed : bool | None = None, priority: int | None = None):
     query = db.query(models.Todo).filter(models.Todo.user_id == user_id)
 
     if completed is not None:
         query = query.filter(models.Todo.completed == completed)
+    if priority is not None:
+        query = query.filter(models.Todo.priority == priority)
     
-    return query.order_by(models.Todo.created_at.desc()).all()
+    return query.order_by(models.Todo.priority.desc(),models.Todo.created_at.desc()).all()
 
 def get_todo(db: Session, todo_id: int, user_id : int):
     return db.query(models.Todo).filter(models.Todo.id == todo_id,
@@ -33,6 +36,8 @@ def update_todo(db: Session, db_todo: models.Todo, todo: schemas.TodoUpdate):
         db_todo.title = todo.title
     if todo.description is not None:
         db_todo.description = todo.description
+    if todo.priority is not None:
+        db_todo.priority = todo.priority
     if todo.completed is not None:
         db_todo.completed = todo.completed
 

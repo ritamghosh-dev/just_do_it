@@ -11,7 +11,8 @@ app = FastAPI()
 origins = [
     "http://localhost:5173",
     "https://just-do-it-frontend.onrender.com",
-    "https://just-do-it-taupe.vercel.app"
+    "https://just-do-it-taupe.vercel.app",
+    "http://127.0.0.1:5173"
 ]
 
 app.add_middleware(
@@ -35,10 +36,11 @@ def create_new_todo(
 @app.get("/todos", response_model=list[schemas.TodoResponse])
 def list_todos(
     completed : bool | None = None,
+    priority : int | None = None,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    return crud.get_todos(db, user_id=current_user.id, completed = completed)
+    return crud.get_todos(db, user_id=current_user.id, completed = completed, priority= priority)
 
 @app.get("/todos/{todo_id}", response_model=schemas.TodoResponse)
 def read_todo(
