@@ -9,7 +9,7 @@ from . import crud
 
 SECRET_KEY = "super-secret-key-change-this"  # temporary
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
 
 

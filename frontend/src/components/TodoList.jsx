@@ -9,6 +9,7 @@ function TodoList() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [editId, setEditId] = useState(0); // 0 means "Create Mode"
+  const [filter, setFilter] = useState("all");
   const API_URL = import.meta.env.VITE_API_URL;
   // --- 1. FETCH (Read) ---
   useEffect(() => {
@@ -19,7 +20,13 @@ function TodoList() {
         return;
       }
       try {
-        const response = await axios.get(`${API_URL}/todos`, {
+        let url = `${API_URL}/todos`;
+        if (filter === "completed") {
+          url += "?completed=true";
+        } else if (filter === "pending") {
+          url += "?completed=false";
+        }
+        const response = await axios.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTodos(response.data);
@@ -29,7 +36,7 @@ function TodoList() {
       }
     };
     fetchTodos();
-  }, [navigate]);
+  }, [navigate, filter]);
 
   // --- 3. UPDATE (Toggle Completed) ---
   const toggleStatus = async (todo) => {
@@ -113,10 +120,25 @@ function TodoList() {
     }
   };
 
+  // --- 5. LOGOUT ---
+
+  const handleLogout = () => {
+    localStorage.removeItem("token"); //1. Destroy the auth token
+    navigate("/"); //2. Redirect to login page
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Just Do It 📝</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">Just Do It 🚀</h1>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition text-sm"
+          >
+            Logout
+          </button>
+        </div>
 
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
@@ -164,6 +186,18 @@ function TodoList() {
             )}
           </div>
         </form>
+
+        <div className="flex justify-end mb-4">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="p-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Tasks</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
 
         <div className="grid gap-4">
           {todos.map((todo) => (

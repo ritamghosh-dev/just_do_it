@@ -34,10 +34,11 @@ def create_new_todo(
 
 @app.get("/todos", response_model=list[schemas.TodoResponse])
 def list_todos(
+    completed : bool | None = None,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    return crud.get_todos(db, user_id=current_user.id)
+    return crud.get_todos(db, user_id=current_user.id, completed = completed)
 
 @app.get("/todos/{todo_id}", response_model=schemas.TodoResponse)
 def read_todo(

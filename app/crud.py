@@ -14,8 +14,13 @@ def create_todo(db: Session, todo: schemas.TodoCreate, user_id: int):
     db.refresh(db_todo)
     return db_todo
 
-def get_todos(db: Session, user_id: int):
-    return db.query(models.Todo).filter(models.Todo.user_id == user_id).all()
+def get_todos(db: Session, user_id: int, completed : bool | None = None):
+    query = db.query(models.Todo).filter(models.Todo.user_id == user_id)
+
+    if completed is not None:
+        query = query.filter(models.Todo.completed == completed)
+    
+    return query.order_by(models.Todo.created_at.desc()).all()
 
 def get_todo(db: Session, todo_id: int, user_id : int):
     return db.query(models.Todo).filter(models.Todo.id == todo_id,
